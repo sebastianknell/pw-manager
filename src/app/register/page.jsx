@@ -10,6 +10,7 @@ import {
     Ephemeral,
 } from "secure-remote-password/client";
 import * as eva from "eva-icons";
+import { Button } from "@nextui-org/button";
 
 export default function Page() {
     useEffect(() => {
@@ -70,6 +71,7 @@ export default function Page() {
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                 />
+                <Button>Click me</Button>
                 <div className="w-72 m-auto">
                     <div className="flex p-2 rounded-md bg-white">
                         <input
@@ -96,7 +98,7 @@ export default function Page() {
                 </p>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 rounded-md bg-blue-500 text-white disabled:bg-gray-400"
+                        className="p-2 rounded-md bg-blue-500 text-white disabled:bg-gray-400 w-32"
                         onClick={register}
                         disabled={!isPasswordValid}
                     >

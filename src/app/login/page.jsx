@@ -9,6 +9,7 @@ import {
     verifySession,
 } from "secure-remote-password/client";
 import * as eva from "eva-icons";
+import { jwtDecode } from "jwt-decode";
 
 export default function Page() {
     useEffect(() => {
@@ -63,17 +64,25 @@ export default function Page() {
                 data = await response.json();
                 console.log(data);
                 const serverSessionProof = data.proof;
-                verifySession(
-                    clientEphemeral.public,
-                    clientSession,
-                    serverSessionProof
-                );
-                router.push("/dashboard");
+                try {
+                    verifySession(
+                        clientEphemeral.public,
+                        clientSession,
+                        serverSessionProof
+                    );
+                    console.log(data.token);
+                    localStorage.setItem('token', data.token);
+                    console.log(jwtDecode(data.token));
+                    router.push("/dashboard");
+                } catch (error) {
+                    console.log(error);
+                }
             }
         }
     }
 
     function createAccount() {
+        console.log('register')
         router.push("/register");
     }
 
@@ -108,7 +117,7 @@ export default function Page() {
                 </div>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 rounded-md bg-blue-500 text-white"
+                        className="p-2 rounded-md bg-blue-500 text-white w-32"
                         onClick={onLogin}
                     >
                         Ingresar
@@ -116,7 +125,7 @@ export default function Page() {
                 </div>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 rounded-md bg-gray-500 text-white"
+                        className="p-2 rounded-md bg-gray-500 text-white w-32"
                         onClick={createAccount}
                     >
                         Crear cuenta
