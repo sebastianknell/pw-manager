@@ -19,9 +19,11 @@ export default function Page() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [canSeePassword, setCanSeePassword] = useState(false);
+    const [userData, setUserData] = useState(null); // Estado para almacenar información del usuario
 
     async function onLogin() {
         const clientEphemeral = generateEphemeral();
+
         let response = await fetch("http://localhost:5050/generate", {
             method: "POST",
             headers: {
@@ -32,51 +34,54 @@ export default function Page() {
                 ephemeral: clientEphemeral.public,
             }),
         });
+
         if (response.ok) {
             let data = await response.json();
-            console.log(data);
-            const salt = data.salt;
-            const ephemeral = data.ephemeral;
 
-            const privateKey = derivePrivateKey(salt, username, password);
-            const clientSession = deriveSession(
-                clientEphemeral.secret,
-                ephemeral,
-                salt,
-                username,
-                privateKey
-            );
+            if (data.salt && data.ephemeral && data.user && data.user.secretKey) {
+                const salt = data.salt;
+                const ephemeral = data.ephemeral;
+                const privateKey = data.user.secretKey;
 
-            console.log(clientSession.key);
-
-            response = await fetch("http://localhost:5050/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+                const clientSession = deriveSession(
+                    clientEphemeral.secret,
+                    ephemeral,
+                    salt,
                     username,
-                    proof: clientSession.proof,
-                }),
-            });
+                    privateKey
+                );
 
-            if (response.ok) {
-                data = await response.json();
-                console.log(data);
-                const serverSessionProof = data.proof;
-                try {
-                    verifySession(
-                        clientEphemeral.public,
-                        clientSession,
-                        serverSessionProof
-                    );
-                    console.log(data.token);
-                    localStorage.setItem('token', data.token);
-                    console.log(jwtDecode(data.token));
-                    router.push("/dashboard");
-                } catch (error) {
-                    console.log(error);
+                response = await fetch("http://localhost:5050/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username,
+                        proof: clientSession.proof,
+                    }),
+                });
+
+                if (response.ok) {
+                    data = await response.json();
+                    const serverSessionProof = data.proof;
+                    try {
+                        verifySession(
+                            clientEphemeral.public,
+                            clientSession,
+                            serverSessionProof
+                        );
+
+                        setUserData(data.user); // Almacena la información del usuario en el estado
+                        localStorage.setItem('token', data.token);
+                        console.log(jwtDecode(data.token));
+                        router.push("/dashboard");
+                    } catch (error) {
+                        console.log(error);
+                    }
                 }
+            } else {
+                console.error("La respuesta no contiene la información completa del usuario.");
             }
         }
     }
@@ -135,3 +140,4 @@ export default function Page() {
         </div>
     );
 }
+

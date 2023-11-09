@@ -11,6 +11,7 @@ import {
 } from "secure-remote-password/client";
 import * as eva from "eva-icons";
 import { Button } from "@nextui-org/button";
+import CryptoJS from "crypto-js";
 
 export default function Page() {
     useEffect(() => {
@@ -21,12 +22,21 @@ export default function Page() {
     const [password, setPassword] = useState("");
     const [isPasswordValid, setIsPasswordValid] = useState(false);
     const [canSeePassword, setCanSeePassword] = useState(false);
+    const [secretKey, setSecretKey] = useState("");
+    const [showSecretKey, setShowSecretKey] = useState(false);
+
+    function generateSecretKey() {
+        const newSecretKey = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+        setSecretKey(newSecretKey);
+        setShowSecretKey(true);
+    }
+    
 
     async function register() {
         const salt = generateSalt();
         const privateKey = derivePrivateKey(salt, username, password);
         const verifier = deriveVerifier(privateKey);
-
+    
         const response = await fetch("http://localhost:5050/register", {
             method: "POST",
             headers: {
@@ -38,10 +48,24 @@ export default function Page() {
                 verifier,
             }),
         });
+    
         if (response.ok) {
-            router.push("/login");
+            // Registro exitoso, ahora generamos la clave secreta
+            const newSecretKey = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+            setSecretKey(newSecretKey);
+            setShowSecretKey(true);
+    
+            // Utilizamos la nueva clave secreta al copiar al portapapeles
+            navigator.clipboard.writeText(newSecretKey);
         }
     }
+    
+    function copyToClipboard() {
+        setShowSecretKey(false);
+        router.push("/login");
+    }
+    
+
 
     function checkPassword(pwd) {
         return (
@@ -105,6 +129,23 @@ export default function Page() {
                         Registrarme
                     </button>
                 </div>
+                {showSecretKey && (
+                    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="bg-white p-4 rounded-md">
+                            <p className="mb-2">Tu nueva clave secreta:</p>
+                            <div className="flex items-center">
+                                <span className="mr-2">{secretKey}</span>
+                                <button
+                                    className="p-2 rounded-md bg-blue-500 text-white w-32"
+                                    onClick={copyToClipboard}
+                                >
+                                    Copiar
+                                </button>
+                            
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
