@@ -7,6 +7,9 @@ export default function PasswordCard({ data, onSave, onCancel }) {
     }, []);
 
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const [web, setWeb] = useState(data.web);
+    const [username, setUsername] = useState(data.username);
+    const [password, setPassword] = useState(data.password);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 z-40 flex justify-center items-center">
@@ -18,13 +21,16 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                             <div className="flex">
                                 <input
                                     className="p-2 rounded-md outline-none w-72"
-                                    value={data.web}
+                                    value={web}
                                     type="url"
+                                    onChange={(event) =>
+                                        setWeb(event.target.value)
+                                    }
                                 />
                                 <button
                                     className="bg-white rounded-md p-2 w-10 ml-2"
                                     onClick={() =>
-                                        navigator.clipboard.writeText(data.web)
+                                        navigator.clipboard.writeText(web)
                                     }
                                 >
                                     <i data-eva="clipboard-outline"></i>
@@ -36,14 +42,15 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                             <div className="flex">
                                 <input
                                     className="p-2 rounded-md outline-none w-72"
-                                    value={data.username}
+                                    value={username}
+                                    onChange={(event) =>
+                                        setUsername(event.target.value)
+                                    }
                                 />
                                 <button
                                     className="bg-white rounded-md p-2 w-10 ml-2"
                                     onClick={() =>
-                                        navigator.clipboard.writeText(
-                                            data.username
-                                        )
+                                        navigator.clipboard.writeText(username)
                                     }
                                 >
                                     <i data-eva="clipboard-outline"></i>
@@ -55,17 +62,20 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                             <div className="flex">
                                 <input
                                     className="p-2 rounded-md outline-none w-72"
-                                    value={data.password}
-                                    type={isPasswordFocused ? "text" : "password"}
+                                    value={password}
+                                    type={
+                                        isPasswordFocused ? "text" : "password"
+                                    }
                                     onFocus={() => setIsPasswordFocused(true)}
                                     onBlur={() => setIsPasswordFocused(false)}
+                                    onChange={(event) =>
+                                        setPassword(event.target.value)
+                                    }
                                 />
                                 <button
                                     className="bg-white rounded-md p-2 w-10 ml-2"
                                     onClick={() =>
-                                        navigator.clipboard.writeText(
-                                            data.password
-                                        )
+                                        navigator.clipboard.writeText(password)
                                     }
                                 >
                                     <i data-eva="clipboard-outline"></i>
@@ -87,7 +97,7 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                         </button>
                         <button
                             className="rounded-md p-2 bg-blue-500 text-white ml-2"
-                            onClick={onSave}
+                            onClick={() => onSave({ web, username, password })}
                         >
                             Guardar
                         </button>
