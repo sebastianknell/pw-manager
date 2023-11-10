@@ -10,6 +10,7 @@ import Password from "@/components/password";
 import { Button } from "antd";
 import NewPasswordForm from "@/components/passwordform";
 import PasswordCard from "@/components/passwordCard";
+import { cryptoService } from "@/services/cryptoService";
 
 export default function Page() {
   const router = useRouter();
@@ -87,6 +88,8 @@ export default function Page() {
         if (data.passwordData === "") {
             setPasswordList([])
         } else {
+            cryptoService.iv = data.encryptionIV;
+            // desencriptar
             setPasswordList(JSON.parse(data.passwordData));
         }
     }
@@ -105,9 +108,14 @@ export default function Page() {
     } else {
         newId = 1;
     }
-    // setPasswordList([...passwordList, {...newPassword, passwordId: newId}]);
     orderedPasswordList.push({...newPassword, passwordId: newId });
-    console.log(orderedPasswordList);
+
+    // encriptar
+    // console.log(cryptoService.encryptionKey);
+    // console.log(cryptoService.iv);
+    // const encryptedData = await cryptoService.encryptData(JSON.stringify(orderedPasswordList), cryptoService.encryptionKey, cryptoService.iv);
+    // console.log(encryptedData)
+
     // guardar en el server
     const res = await fetch("http://localhost:5050/savepasswords", {
         method: "POST",

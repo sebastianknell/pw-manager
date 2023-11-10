@@ -30,7 +30,6 @@ export default function Page() {
         setSecretKey(newSecretKey);
         setShowSecretKey(true);
     }
-    
 
     async function register() {
         const salt = generateSalt();
@@ -51,12 +50,13 @@ export default function Page() {
     
         if (response.ok) {
             // Registro exitoso, ahora generamos la clave secreta
-            const newSecretKey = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-            setSecretKey(newSecretKey);
-            setShowSecretKey(true);
+            // const newSecretKey = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+            // setSecretKey(newSecretKey);
+            // setShowSecretKey(true);
     
-            // Utilizamos la nueva clave secreta al copiar al portapapeles
-            navigator.clipboard.writeText(newSecretKey);
+            // // Utilizamos la nueva clave secreta al copiar al portapapeles
+            // navigator.clipboard.writeText(newSecretKey);
+            router.push("/login");
         }
     }
     
@@ -95,13 +95,12 @@ export default function Page() {
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
                 />
-                <Button>Click me</Button>
                 <div className="w-72 m-auto">
                     <div className="flex p-2 rounded-md bg-white">
                         <input
                             type={canSeePassword ? "text" : "password"}
                             placeholder="contraseña"
-                            className="outline-none block"
+                            className="outline-none grow"
                             value={password}
                             onChange={(event) =>
                                 validatePassword(event.target.value)

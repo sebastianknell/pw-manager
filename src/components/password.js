@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 export default function Password({ data }) {
     const [isOpen, setIsOpen] = useState(false);
 
-    function onCardSave() {
+    function onCardSave(updatedPassword) {
         // TODO: update data
         setIsOpen(false);
     }

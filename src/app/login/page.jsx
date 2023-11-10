@@ -10,6 +10,7 @@ import {
 } from "secure-remote-password/client";
 import * as eva from "eva-icons";
 import { jwtDecode } from "jwt-decode";
+import { cryptoService } from "@/services/cryptoService";
 
 export default function Page() {
     useEffect(() => {
@@ -19,7 +20,6 @@ export default function Page() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [canSeePassword, setCanSeePassword] = useState(false);
-    const [userData, setUserData] = useState(null); // Estado para almacenar información del usuario
 
     async function onLogin() {
         const clientEphemeral = generateEphemeral();
@@ -41,7 +41,11 @@ export default function Page() {
             if (data.salt && data.ephemeral && data.user && data.user.secretKey) {
                 const salt = data.salt;
                 const ephemeral = data.ephemeral;
-                const privateKey = data.user.secretKey;
+                const privateKey = derivePrivateKey(
+                    salt,
+                    username,
+                    password
+                );
 
                 const clientSession = deriveSession(
                     clientEphemeral.secret,
@@ -72,9 +76,17 @@ export default function Page() {
                             serverSessionProof
                         );
 
-                        setUserData(data.user); // Almacena la información del usuario en el estado
                         localStorage.setItem('token', data.token);
-                        console.log(jwtDecode(data.token));
+                        const tokenData = jwtDecode(data.token);
+                        console.log(tokenData);
+                        const username = tokenData.username;
+                        const encryptionSalt = tokenData.encryptionSalt;
+                        // derivar llave
+                        const encryptionKey = await cryptoService.deriveKey(password, encryptionSalt, 10000, "SHA-256", 256);
+                        console.log(encryptionKey);
+                        // localStorage.setItem("encryptionKey", encryptionKey);
+                        // cryptoService.encryptionKey = encryptionKey;
+
                         router.push("/dashboard");
                     } catch (error) {
                         console.log(error);
@@ -87,7 +99,6 @@ export default function Page() {
     }
 
     function createAccount() {
-        console.log('register')
         router.push("/register");
     }
 
@@ -105,7 +116,7 @@ export default function Page() {
                         <input
                             placeholder="contraseña"
                             type={canSeePassword ? "text" : "password"}
-                            className="outline-none block"
+                            className="outline-none grow"
                             value={password}
                             onChange={(event) =>
                                 setPassword(event.target.value)
