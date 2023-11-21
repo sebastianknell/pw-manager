@@ -37,13 +37,21 @@ async function deriveKey(password, salt, iterations, hash, length) {
         true,
         ["encrypt", "decrypt"]
     );
-
     return derivedKey;
 }
 
 async function encryptData(data, derivedKey, iv) {
+    console.log("Data:", data);
+    console.log("Derived Key:", derivedKey);
+    console.log("IV:", iv);
+
     let enc = new TextEncoder();
     let encodedData = enc.encode(data);
+    // Revisar que derivedKey sea un CryptoKey
+    if (!(derivedKey instanceof CryptoKey)) {
+        throw new Error("El segundo parámetro 'derivedKey' no es un CryptoKey.");
+    }
+    iv = iv instanceof ArrayBuffer ? new Uint8Array(iv) : iv;
 
     let encryptedData = await window.crypto.subtle.encrypt(
         {

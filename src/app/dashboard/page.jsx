@@ -11,6 +11,9 @@ import { Button } from "antd";
 import NewPasswordForm from "@/components/passwordform";
 import PasswordCard from "@/components/passwordCard";
 import { cryptoService } from "@/services/cryptoService";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function Page() {
   const router = useRouter();
@@ -37,6 +40,32 @@ export default function Page() {
 
   const handleNewPassword = () => {
     setShowNewPasswordForm(true);
+  };
+
+  //create secure password
+  function generateSecurePassword(length = 12) {
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=";
+  
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
+    }
+  
+    return password;
+  }
+
+  const handleGeneratePassword = () => {
+    const newPassword = generateSecurePassword();
+    toast.info(`Contraseña generada: ${newPassword}`, {
+      position: 'top-right',
+      autoClose: true,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+      progress: undefined,
+    });
   };
 
   const handleSaveNewPassword = (newPasswordData) => {
@@ -79,6 +108,7 @@ export default function Page() {
   async function getPasswords() {
     console.log("getting passwords")
     const token = localStorage.getItem("token");
+    
     const res = await fetch("http://localhost:5050/getpasswords", {
         method: "GET",
         headers: { Authorization: "Bearer " + token },
@@ -98,6 +128,12 @@ export default function Page() {
   async function saveNewPassword(newPassword) {
     console.log("saving passwords");
     const token = localStorage.getItem("token");
+
+    // Generar el IV y mostrar su longitud
+    const iv = cryptoService.generateIV();
+    console.log("IV Length:", iv.length);
+
+    
     const orderedPasswordList = [...passwordList]
     let newId;
     if (orderedPasswordList.length > 0) {
@@ -111,36 +147,71 @@ export default function Page() {
     orderedPasswordList.push({...newPassword, passwordId: newId });
 
     // encriptar
-    // console.log(cryptoService.encryptionKey);
-    // console.log(cryptoService.iv);
-    // const encryptedData = await cryptoService.encryptData(JSON.stringify(orderedPasswordList), cryptoService.encryptionKey, cryptoService.iv);
-    // console.log(encryptedData)
+    //console.log(cryptoService.encryptionKey);
+    //console.log(cryptoService.iv);
+    //const encryptedData = await cryptoService.encryptData(JSON.stringify(orderedPasswordList), cryptoService.encryptionKey, cryptoService.iv);
+    //console.log(encryptedData)
 
-    // guardar en el server
-    const res = await fetch("http://localhost:5050/savepasswords", {
-        method: "POST",
-        headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            passwordData: JSON.stringify(orderedPasswordList),
-        }),
-    });
-    if (res.ok) {
-        setShowNewPasswordForm(false);
-        await getPasswords();
-    }
+    try {
+      // Convertir la clave almacenada en un CryptoKey
+      const storedEncryptionKey = localStorage.getItem("encryptionKey");
+      console.log("Longitud de la clave almacenada:", storedEncryptionKey.length);
+      const encryptionKey = await window.crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(storedEncryptionKey),
+          { name: "AES-GCM", length: length},
+          false,
+          ["encrypt", "decrypt"]
+      );
+
+      // Encriptar
+      const encryptedData = await cryptoService.encryptData(
+          JSON.stringify(orderedPasswordList),
+          encryptionKey ,
+          iv
+      );
+      console.log(encryptedData);
+
+      // Guardar en el servidor
+      const res = await fetch("http://localhost:5050/savepasswords", {
+          method: "POST",
+          headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+              passwordData: encryptedData,
+              encryptionIV: iv,
+          }),
+      });
+
+      if (res.ok) {
+          setShowNewPasswordForm(false);
+          await getPasswords();
+      } else {
+          console.error("Error al guardar la contraseña en el servidor");
+      }
+  } catch (error) {
+      console.error("Error al encriptar la contraseña:", error);
   }
+}
 
   return (
       <>
           <Head>
               <title>Dashboard</title>
           </Head>
+          <ToastContainer />
           <div className="flex flex-col h-screen">
               <div className="flex justify-between items-center p-2 bg-blue-500">
                   <h1 className="text-white text-xl">Utec Password Manager</h1>
+                  <button
+                    className="flex p-2 bg-green-500 rounded-md text-white"
+                    onClick={handleGeneratePassword}
+                  >
+                    Generate
+                  </button>
+
                   <button
                       className="p-2 rounded-md bg-red-500 text-white w-32"
                       onClick={logout}
