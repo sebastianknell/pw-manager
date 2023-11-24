@@ -85,8 +85,8 @@ export default function Page() {
                         //metodo 1- derivar llave
                         const encryptionKey = await cryptoService.deriveKey(password, encryptionSalt, 10000, "SHA-256", 256);
                         console.log("Derived Key:", encryptionKey);
-                        localStorage.setItem("encryptionKey", encryptionKey);
-                        //cryptoService.encryptionKey = encryptionKey;
+                        // localStorage.setItem("encryptionKey", encryptionKey);
+                        cryptoService.encryptionKey = encryptionKey;
 
                         router.push("/dashboard");
                     } catch (error) {

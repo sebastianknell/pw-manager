@@ -1,11 +1,11 @@
 export const cryptoService = {
     encryptionKey: undefined,
-    iv: undefined,
     deriveKey,
     encryptData,
     decryptData,
-    generateIV
-}
+    generateIV,
+    base64ToUint8Array,
+};
 
 async function deriveKey(password, salt, iterations, hash, length) {
     // Convert password to ArrayBuffer
@@ -40,18 +40,18 @@ async function deriveKey(password, salt, iterations, hash, length) {
     return derivedKey;
 }
 
-async function encryptData(data, derivedKey, iv) {
-    console.log("Data:", data);
-    console.log("Derived Key:", derivedKey);
-    console.log("IV:", iv);
+async function encryptData(data, derivedKey, ivStr) {
+    const iv = base64ToUint8Array(ivStr);
 
     let enc = new TextEncoder();
     let encodedData = enc.encode(data);
+    console.log(encodedData)
     // Revisar que derivedKey sea un CryptoKey
     if (!(derivedKey instanceof CryptoKey)) {
-        throw new Error("El segundo parámetro 'derivedKey' no es un CryptoKey.");
+        throw new Error(
+            "El segundo parámetro 'derivedKey' no es un CryptoKey."
+        );
     }
-    iv = iv instanceof ArrayBuffer ? new Uint8Array(iv) : iv;
 
     let encryptedData = await window.crypto.subtle.encrypt(
         {
@@ -61,11 +61,13 @@ async function encryptData(data, derivedKey, iv) {
         derivedKey,
         encodedData
     );
-
-    return new Uint8Array(encryptedData);
+    const base64String = uint8ArrayToBase64(new Uint8Array(encryptedData));
+    return base64String;
 }
 
-async function decryptData(encryptedData, derivedKey, iv) {
+async function decryptData(encryptedDataStr, derivedKey, ivStr) {
+    const encryptedData = base64ToUint8Array(encryptedDataStr);
+    const iv = base64ToUint8Array(ivStr);
     try {
         let decryptedData = await window.crypto.subtle.decrypt(
             {
@@ -79,14 +81,30 @@ async function decryptData(encryptedData, derivedKey, iv) {
         let dec = new TextDecoder();
         return dec.decode(decryptedData);
     } catch (e) {
-        throw new Error(
-            "El proceso de desencriptado falló."
-        );
+        throw new Error("El proceso de desencriptado falló.");
     }
 }
 
 function generateIV() {
-    // Create a Uint8Array of 12 bytes (96 bits)
     let iv = window.crypto.getRandomValues(new Uint8Array(12));
-    return iv;
+    return uint8ArrayToBase64(iv);
+}
+
+function uint8ArrayToBase64(buffer) {
+    let binaryString = "";
+    for (let i = 0; i < buffer.byteLength; i++) {
+        binaryString += String.fromCharCode(buffer[i]);
+    }
+    return window.btoa(binaryString);
+}
+
+
+function base64ToUint8Array(base64) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
 }
