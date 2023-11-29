@@ -7,8 +7,6 @@ import { authService } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import Password from "@/components/password";
-import { Button } from "antd";
-import NewPasswordForm from "@/components/passwordform";
 import PasswordCard from "@/components/passwordCard";
 import { cryptoService } from "@/services/cryptoService";
 import { ToastContainer, toast } from "react-toastify";
@@ -67,41 +65,6 @@ export default function Page() {
         });
     };
 
-    const handleSaveNewPassword = (newPasswordData) => {
-        try {
-            const token = localStorage.getItem("token");
-            fetch("http://localhost:5050/createPassword", {
-                method: "POST",
-                headers: {
-                    Authorization: "Bearer " + token,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    password: newPasswordData.userPassword,
-                }),
-            })
-                .then((response) => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        console.error("Error al crear la contraseña");
-                        throw new Error("Error al crear la contraseña");
-                    }
-                })
-                .then((newData) => {
-                    setPasswordList([...passwordList, newData]);
-                })
-                .catch((error) => {
-                    console.error("Error al crear la contraseña:", error);
-                })
-                .finally(() => {
-                    setShowNewPasswordForm(false);
-                });
-        } catch (error) {
-            console.error("Error al crear la contraseña:", error);
-        }
-    };
-
     useEffect(() => {
         getPasswords().then(() => {});
     }, []);
@@ -126,39 +89,26 @@ export default function Page() {
                     cryptoService.encryptionKey,
                     data.encryptionIV
                 );
-                console.log(decryptedData);
-                setPasswordList(JSON.parse(decryptedData));
+                let decryptedDataArr = JSON.parse(decryptedData);
+                decryptedDataArr.forEach(x => x.lastUpdate = null)
+                setPasswordList(decryptedDataArr);
             }
         }
     }
 
-    async function saveNewPassword(newPassword) {
-        console.log("saving passwords");
-        const token = localStorage.getItem("token");
-        const orderedPasswordList = [...passwordList];
-        let newId;
-        if (orderedPasswordList.length > 0) {
-            const max = orderedPasswordList.reduce((prev, current) =>
-                prev && prev.passwordId > current.passwordId ? prev : current
-            );
-            newId = max.passwordId + 1;
-        } else {
-            newId = 1;
-        }
-        orderedPasswordList.push({ ...newPassword, passwordId: newId });
-
+    async function syncPasswords(passwordData) {
         try {
             // Encriptar
             const iv = cryptoService.generateIV();
-            console.log("IV: ", iv);
             const encryptedData = await cryptoService.encryptData(
-                JSON.stringify(orderedPasswordList),
+                JSON.stringify(passwordData),
                 cryptoService.encryptionKey,
                 iv
             );
             console.log(encryptedData);
 
             // Guardar en el servidor
+            const token = localStorage.getItem("token");
             const res = await fetch("http://localhost:5050/savepasswords", {
                 method: "POST",
                 headers: {
@@ -172,13 +122,54 @@ export default function Page() {
             });
 
             if (res.ok) {
-                setShowNewPasswordForm(false);
-                await getPasswords();
+                return true;
             } else {
-                console.error("Error al guardar la contraseña en el servidor");
+                console.error("Error al guardar las contraseñas en el servidor");
+                return false;
             }
         } catch (error) {
-            console.error("Error al encriptar la contraseña:", error);
+            console.error("Error al encriptar las contraseñas:", error);
+        }
+    }
+
+    async function saveNewPassword(newPassword) {
+        console.log("saving passwords");
+        const orderedPasswordList = [...passwordList];
+        let newId;
+        if (orderedPasswordList.length > 0) {
+            const max = orderedPasswordList.reduce((prev, current) =>
+                prev && prev.passwordId > current.passwordId ? prev : current
+            );
+            newId = max.passwordId + 1;
+        } else {
+            newId = 1;
+        }
+        orderedPasswordList.push({ ...newPassword, passwordId: newId });
+
+        const success = await syncPasswords(orderedPasswordList);
+        if (success) {
+            setShowNewPasswordForm(false);
+            await getPasswords();
+        }
+    }
+
+    async function updatePasswords(updatedPassword) {
+        console.log("updating passwords")
+        const passwordListCopy = [...passwordList];
+        console.log(passwordListCopy);
+        console.log(updatedPassword);
+        const idx = passwordListCopy.findIndex(
+            (x) => x.passwordId === updatedPassword.passwordId
+        );
+        if (idx === -1) {
+            console.log("Problema al actualizar contraseña")
+            return;
+        }
+        passwordListCopy[idx] = updatedPassword;
+
+        const success = await syncPasswords(passwordListCopy);
+        if (success) {
+            await getPasswords();
         }
     }
 
@@ -229,22 +220,22 @@ export default function Page() {
                             onChange={(event) => setSearch(event.target.value)}
                         />
                         <div className="space-y-2">
-                            {Array.isArray(passwordList) &&
-                                passwordList
-                                    .filter(
-                                        (pwd) =>
-                                            pwd &&
-                                            pwd.web &&
-                                            pwd.web
-                                                .toLowerCase()
-                                                .includes(search.toLowerCase())
-                                    )
-                                    .map((pwd) => (
-                                        <Password
-                                            key={pwd.passwordId}
-                                            data={pwd}
-                                        ></Password>
-                                    ))}
+                            {passwordList
+                                .filter(
+                                    (pwd) =>
+                                        pwd &&
+                                        pwd.web &&
+                                        pwd.web
+                                            .toLowerCase()
+                                            .includes(search.toLowerCase())
+                                )
+                                .map((pwd) => (
+                                    <Password
+                                        key={pwd.passwordId}
+                                        data={pwd}
+                                        onSave={updatePasswords}
+                                    ></Password>
+                                ))}
                         </div>
                     </div>
                 </div>
@@ -258,7 +249,7 @@ export default function Page() {
             {showNewPasswordForm &&
                 createPortal(
                     <PasswordCard
-                        data={{ username: "", web: "", password: "" }}
+                        data={{ username: "", web: "", password: "", lastUpdate: null }}
                         onCancel={() => setShowNewPasswordForm(false)}
                         onSave={saveNewPassword}
                     ></PasswordCard>,

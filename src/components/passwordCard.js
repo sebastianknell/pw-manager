@@ -83,10 +83,11 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                             </div>
                         </div>
                         <br></br>
-                        <div className="mt-4">
-                            {"Ultimá actualización: " +
-                                new Date().toDateString()}
-                        </div>
+                        {data.lastUpdate !== null && (
+                            <div className="mt-4">
+                                {"Ultimá actualización: " + lastUpdate}
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end">
                         <button
@@ -97,7 +98,15 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                         </button>
                         <button
                             className="rounded-md p-2 bg-blue-500 text-white ml-2"
-                            onClick={() => onSave({ web, username, password })}
+                            onClick={() =>
+                                onSave({
+                                    passwordId: data.passwordId,
+                                    web,
+                                    username,
+                                    password,
+                                    lastUpdate: new Date().toDateString(),
+                                })
+                            }
                         >
                             Guardar
                         </button>

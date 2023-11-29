@@ -2,11 +2,11 @@ import { useState } from "react";
 import PasswordCard from "./passwordCard";
 import { createPortal } from "react-dom";
 
-export default function Password({ data }) {
+export default function Password({ data, onSave }) {
     const [isOpen, setIsOpen] = useState(false);
 
-    function onCardSave(updatedPassword) {
-        // TODO: update data
+    async function onCardSave(updatedPassword) {
+        await onSave(updatedPassword);
         setIsOpen(false);
     }
 
