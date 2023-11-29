@@ -135,6 +135,9 @@ export default function Page() {
                 console.error(
                     "Error al guardar las contraseñas en el servidor"
                 );
+                if (res.status === 403) {
+                    logout();
+                }
                 return false;
             }
         } catch (error) {
