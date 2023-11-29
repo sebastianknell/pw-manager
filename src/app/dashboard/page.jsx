@@ -83,15 +83,23 @@ export default function Page() {
                 setPasswordList([]);
             } else {
                 // desencriptar
-                console.log(data.passwordData);
-                const decryptedData = await cryptoService.decryptData(
-                    data.passwordData,
-                    cryptoService.encryptionKey,
-                    data.encryptionIV
-                );
-                let decryptedDataArr = JSON.parse(decryptedData);
-                decryptedDataArr.forEach(x => x.lastUpdate = null)
-                setPasswordList(decryptedDataArr);
+                try {
+                    const decryptedData = await cryptoService.decryptData(
+                        data.passwordData,
+                        cryptoService.encryptionKey,
+                        data.encryptionIV
+                    );
+                    let decryptedDataArr = JSON.parse(decryptedData);
+                    decryptedDataArr.forEach((x) => (x.lastUpdate = null));
+                    setPasswordList(decryptedDataArr);
+                } catch (e) {
+                    console.log(e);
+                    logout();
+                }
+            }
+        } else {
+            if (res.status === 403) {
+                logout();
             }
         }
     }
@@ -124,7 +132,9 @@ export default function Page() {
             if (res.ok) {
                 return true;
             } else {
-                console.error("Error al guardar las contraseñas en el servidor");
+                console.error(
+                    "Error al guardar las contraseñas en el servidor"
+                );
                 return false;
             }
         } catch (error) {
@@ -154,7 +164,7 @@ export default function Page() {
     }
 
     async function updatePasswords(updatedPassword) {
-        console.log("updating passwords")
+        console.log("updating passwords");
         const passwordListCopy = [...passwordList];
         console.log(passwordListCopy);
         console.log(updatedPassword);
@@ -162,7 +172,7 @@ export default function Page() {
             (x) => x.passwordId === updatedPassword.passwordId
         );
         if (idx === -1) {
-            console.log("Problema al actualizar contraseña")
+            console.log("Problema al actualizar contraseña");
             return;
         }
         passwordListCopy[idx] = updatedPassword;
@@ -179,7 +189,7 @@ export default function Page() {
                 <title>Dashboard</title>
             </Head>
             <ToastContainer />
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col h-screen overflow-scroll">
                 <div className="flex justify-between items-center p-2 bg-blue-500">
                     <h1 className="text-white text-xl">
                         Utec Password Manager
@@ -249,7 +259,12 @@ export default function Page() {
             {showNewPasswordForm &&
                 createPortal(
                     <PasswordCard
-                        data={{ username: "", web: "", password: "", lastUpdate: null }}
+                        data={{
+                            username: "",
+                            web: "",
+                            password: "",
+                            lastUpdate: null,
+                        }}
                         onCancel={() => setShowNewPasswordForm(false)}
                         onSave={saveNewPassword}
                     ></PasswordCard>,
