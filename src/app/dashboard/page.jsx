@@ -14,6 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Page() {
     const router = useRouter();
+    const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -21,6 +22,22 @@ export default function Page() {
             router.push("/login");
         }
     }, [router]);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setCountdown((prevCountdown) => prevCountdown - 1);
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
+        if (countdown === 0) {
+            clearInterval(intervalId);
+            // Handle expiration (e.g., redirect to login)
+            router.push("/login");
+        }
+    }, [countdown, router]);
 
     useEffect(() => {
         eva.replace();
@@ -273,6 +290,9 @@ export default function Page() {
                     ></PasswordCard>,
                     document.body
                 )}
+            <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-2 text-center">
+                Session expires in {Math.floor(countdown / 60)}:{countdown % 60} minutes
+            </div>
         </>
     );
 }
