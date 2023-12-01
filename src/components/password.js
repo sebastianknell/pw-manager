@@ -2,7 +2,7 @@ import { useState } from "react";
 import PasswordCard from "./passwordCard";
 import { createPortal } from "react-dom";
 
-export default function Password({ data, onSave }) {
+export default function Password({ data, onSave, onDelete }) {
     const [isOpen, setIsOpen] = useState(false);
 
     async function onCardSave(updatedPassword) {
@@ -11,6 +11,11 @@ export default function Password({ data, onSave }) {
     }
 
     function onCardCancel() {
+        setIsOpen(false);
+    }
+
+    async function onCardDelete() {
+        await onDelete(data.passwordId);
         setIsOpen(false);
     }
 
@@ -30,6 +35,7 @@ export default function Password({ data, onSave }) {
                         data={data}
                         onSave={onCardSave}
                         onCancel={onCardCancel}
+                        onDelete={onCardDelete}
                     ></PasswordCard>,
                     document.body
                 )}

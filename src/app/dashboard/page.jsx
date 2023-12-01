@@ -33,9 +33,7 @@ export default function Page() {
 
     useEffect(() => {
         if (countdown === 0) {
-            clearInterval(intervalId);
-            // Handle expiration (e.g., redirect to login)
-            router.push("/login");
+            logout();
         }
     }, [countdown, router]);
 
@@ -101,6 +99,7 @@ export default function Page() {
             } else {
                 // desencriptar
                 try {
+                    console.log("password data", data.passwordData);
                     const decryptedData = await cryptoService.decryptData(
                         data.passwordData,
                         cryptoService.encryptionKey,
@@ -122,6 +121,7 @@ export default function Page() {
     }
 
     async function syncPasswords(passwordData) {
+        console.log("syncing passwords");
         try {
             // Encriptar
             const iv = cryptoService.generateIV();
@@ -130,7 +130,7 @@ export default function Page() {
                 cryptoService.encryptionKey,
                 iv
             );
-            console.log(encryptedData);
+            console.log("encrypted data", encryptedData);
 
             // Guardar en el servidor
             const token = localStorage.getItem("token");
@@ -203,6 +203,18 @@ export default function Page() {
         }
     }
 
+    async function deletePassword(passwordId) {
+        console.log("deleting password");
+        let passwordListCopy = [...passwordList];
+        passwordListCopy = passwordListCopy.filter(
+            (x) => x.passwordId !== passwordId
+        );
+        const success = await syncPasswords(passwordListCopy);
+        if (success) {
+            await getPasswords();
+        }
+    }
+
     return (
         <>
             <Head>
@@ -219,7 +231,7 @@ export default function Page() {
                             className="p-2 bg-green-500 rounded-md text-white w-32 mr-2"
                             onClick={handleGeneratePassword}
                         >
-                            Generate
+                            Generar
                         </button>
                         <button
                             className="p-2 rounded-md bg-red-500 text-white w-32"
@@ -264,6 +276,7 @@ export default function Page() {
                                         key={pwd.passwordId}
                                         data={pwd}
                                         onSave={updatePasswords}
+                                        onDelete={deletePassword}
                                     ></Password>
                                 ))}
                         </div>
@@ -280,6 +293,7 @@ export default function Page() {
                 createPortal(
                     <PasswordCard
                         data={{
+                            passwordId: null,
                             username: "",
                             web: "",
                             password: "",
@@ -291,7 +305,8 @@ export default function Page() {
                     document.body
                 )}
             <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-2 text-center">
-                Session expires in {Math.floor(countdown / 60)}:{countdown % 60} minutes
+                La sesión expira en {Math.floor(countdown / 60)}:
+                {countdown % 60} minutos
             </div>
         </>
     );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import * as eva from "eva-icons";
 
-export default function PasswordCard({ data, onSave, onCancel }) {
+export default function PasswordCard({ data, onSave, onCancel, onDelete }) {
     useEffect(() => {
         eva.replace();
     }, []);
@@ -89,27 +89,33 @@ export default function PasswordCard({ data, onSave, onCancel }) {
                             </div>
                         )}
                     </div>
-                    <div className="flex justify-end">
-                        <button
-                            className="rounded-md p-2 bg-gray-400 text-white"
-                            onClick={onCancel}
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            className="rounded-md p-2 bg-blue-500 text-white ml-2"
-                            onClick={() =>
-                                onSave({
-                                    passwordId: data.passwordId,
-                                    web,
-                                    username,
-                                    password,
-                                    lastUpdate: new Date().toDateString(),
-                                })
-                            }
-                        >
-                            Guardar
-                        </button>
+                    <div className="flex justify-between">
+                        {data.passwordId !== null && <button className="rounded-md p-2 bg-red-500 text-white" onClick={() => {onDelete(data.passwordId)}} disabled={data.passwordId === null}>
+                            Eliminar
+                        </button>}
+                        {data.passwordId === null && <div></div>}
+                        <div className="flex">
+                            <button
+                                className="rounded-md p-2 bg-gray-400 text-white"
+                                onClick={onCancel}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="rounded-md p-2 bg-blue-500 text-white ml-2"
+                                onClick={() =>
+                                    onSave({
+                                        passwordId: data.passwordId,
+                                        web,
+                                        username,
+                                        password,
+                                        lastUpdate: new Date().toDateString(),
+                                    })
+                                }
+                            >
+                                Guardar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
