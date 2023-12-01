@@ -70,7 +70,7 @@ export default function Page() {
 
     const handleGeneratePassword = () => {
         const newPassword = generateSecurePassword();
-        toast.info(`Contraseña generada: ${newPassword}`, {
+        toast.info('Contraseña copiada al portapapeles.', {
             position: "top-right",
             autoClose: true,
             closeOnClick: false,
@@ -78,6 +78,7 @@ export default function Page() {
             draggable: false,
             progress: undefined,
         });
+        navigator.clipboard.writeText(newPassword);
     };
 
     useEffect(() => {
@@ -306,7 +307,7 @@ export default function Page() {
                 )}
             <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-2 text-center">
                 La sesión expira en {Math.floor(countdown / 60)}:
-                {countdown % 60} minutos
+                {String(countdown % 60).padStart(2, '0')} minutos
             </div>
         </>
     );
