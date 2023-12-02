@@ -225,7 +225,7 @@ export default function Page() {
             <div className="flex flex-col h-screen overflow-scroll">
                 <div className="flex justify-between items-center p-2 bg-blue-500">
                     <h1 className="text-white text-xl">
-                        Utec Password Manager
+                        Password Manager
                     </h1>
                     <div className="flex">
                         <button
