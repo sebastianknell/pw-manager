@@ -1,6 +1,7 @@
 export const cryptoService = {
     encryptionKey: undefined,
     deriveKey,
+    exportKey,
     encryptData,
     decryptData,
     generateIV,
@@ -38,6 +39,20 @@ async function deriveKey(password, salt, iterations, hash, length) {
         ["encrypt", "decrypt"]
     );
     return derivedKey;
+}
+
+async function exportKey(key) {
+    try {
+        const exportedKey = await window.crypto.subtle.exportKey("raw", key);
+        const keyBuffer = new Uint8Array(exportedKey);
+        let binary = "";
+        for (let i = 0; i < keyBuffer.byteLength; i++) {
+            binary += String.fromCharCode(keyBuffer[i]);
+        }
+        return window.btoa(binary);
+    } catch (error) {
+        console.error("Error exporting key:", error);
+    }
 }
 
 async function encryptData(data, derivedKey, ivStr) {

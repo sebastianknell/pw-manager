@@ -65,8 +65,6 @@ export default function Page() {
         router.push("/login");
     }
     
-
-
     function checkPassword(pwd) {
         return (
             /[A-Z]/.test(pwd) &&
