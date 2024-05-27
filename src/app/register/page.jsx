@@ -12,6 +12,7 @@ import {
 import * as eva from "eva-icons";
 import { Button } from "@nextui-org/button";
 import CryptoJS from "crypto-js";
+import { API } from "@/config/environment";
 
 export default function Page() {
     useEffect(() => {
@@ -36,7 +37,7 @@ export default function Page() {
         const privateKey = derivePrivateKey(salt, username, password);
         const verifier = deriveVerifier(privateKey);
     
-        const response = await fetch("http://localhost:5050/register", {
+        const response = await fetch(`${API}/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

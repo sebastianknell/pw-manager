@@ -10,6 +10,7 @@ import Password from "@/components/password";
 import PasswordCard from "@/components/passwordCard";
 import { cryptoService } from "@/services/cryptoService";
 import { ToastContainer, toast } from "react-toastify";
+import { API } from "@/config/environment";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Page() {
@@ -89,7 +90,7 @@ export default function Page() {
         console.log("getting passwords");
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5050/getpasswords", {
+        const res = await fetch(`${API}/getpasswords`, {
             method: "GET",
             headers: { Authorization: "Bearer " + token },
         });
@@ -135,7 +136,7 @@ export default function Page() {
 
             // Guardar en el servidor
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:5050/savepasswords", {
+            const res = await fetch(`${API}/savepasswords`, {
                 method: "POST",
                 headers: {
                     Authorization: "Bearer " + token,
@@ -284,12 +285,6 @@ export default function Page() {
                     </div>
                 </div>
             </div>
-            {/* Nuevo componente para el formulario de nueva contraseña */}
-            {/* <NewPasswordForm
-        visible={showNewPasswordForm}
-        onClose={() => setShowNewPasswordForm(false)}
-        onSave={handleSaveNewPassword}
-      /> */}
             {showNewPasswordForm &&
                 createPortal(
                     <PasswordCard

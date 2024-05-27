@@ -11,6 +11,7 @@ import {
 import * as eva from "eva-icons";
 import { jwtDecode } from "jwt-decode";
 import { cryptoService } from "@/services/cryptoService";
+import { API } from "@/config/environment";
 
 export default function Page() {
     useEffect(() => {
@@ -22,17 +23,9 @@ export default function Page() {
     const [canSeePassword, setCanSeePassword] = useState(false);
 
     async function onLogin() {
-        // const clientEphemeral = generateEphemeral();
-        // console.log(clientEphemeral.public)
-        // console.log(clientEphemeral.secret)
-        const clientEphemeral = {
-            public: "1b3363a2e5331877e7f6e48bbbc4544a0eca38b140174a6bf3cd393b66a6f507322472bf7ce555f4e01283a499bdccba9a58b810738e2a1b74dfb205d0d485a7bb034dc2bb33d7027c2d0887fe14e59cfdc33197c01eabbf8af210aa7e1cb1fbac5878dc17311964e509558a9083c068add41b2393e5d8d7f11f4658fe6e204d0e10838a6f07a5979c51b914c9296fe9749fa9b59454dd7e821935f5e736a440420afd584d8a88ae49877449237361a4225d540378c63d0a2b02556af5bee1ff2b7dab99f7c4208bb59658189ed84cca4d2d2e640ac77d83b9794d0ed868a055dfe8b4d01abf2e912ff10e1a7570dd8211ca232a51b6a506dfa83a1ea994541c",
-            secret: "04dd472570688529b06a3692e7faf8460424caa6bad9cf9a03b0eba0a018d83d",
-        };
-        // proof
-        // 1506be59ac98b7fbf71784ebc84ec2b3d803f21c20c4496c9d368a476012756a
+        const clientEphemeral = generateEphemeral();
 
-        let response = await fetch("http://localhost:5050/generate", {
+        let response = await fetch(`${API}/generate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -61,9 +54,8 @@ export default function Page() {
                     privateKey
                 );
                 console.log("proof", clientSession.proof);
-                console.log("S", clientSession.S);
 
-                response = await fetch("http://localhost:5050/login", {
+                response = await fetch(`${API}/login`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
